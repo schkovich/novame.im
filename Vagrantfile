@@ -4,7 +4,32 @@ require 'yaml'
 
 dir = File.dirname(File.expand_path(__FILE__))
 data = YAML.load_file("#{dir}/novame.yaml")
-config = data['vagrantfile-config']
+conf = data['vagrantfile-config']
+require 'yaml'
+
+dir = File.dirname(File.expand_path(__FILE__))
+data = YAML.load_file("#{dir}/novame.yaml")
+conf = data['vagrantfile-config']
+
+case
+  when !conf['vm']['chosen_provider'].nil?
+    provider_name = conf['vm']['chosen_provider']
+  when !"#{ENV['VAGRANT_DEFAULT_PROVIDER']}".empty?
+    provider_name = "#{ENV['VAGRANT_DEFAULT_PROVIDER']}"
+  else
+    provider_name = 'virtualbox'
+end
+
+# todo: odd; removing
+# ENV['VAGRANT_DEFAULT_PROVIDER'] = provider_name
+provider = conf['vm']['providers'][provider_name]
+
+shell = conf['vm']['provision']['shell']
+puppet = conf['vm']['provision']['puppet']
+network = conf['vm']['providers'][provider_name]['network']
+synced_folder = conf['vm']['synced_folder'];
+ssh = conf['ssh']
+Vagrant.require_version conf['vagrant']['require_version']
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
@@ -19,16 +44,17 @@ Vagrant.configure(2) do |config|
   # boxes at https://atlas.hashicorp.com/search.
   config.vm.box = "ubuntu/trusty64"
 
-  config.vm.provider :digital_ocean do |provider, override|
-    override.ssh.private_key_path = '~/.ssh/goran'
-    override.vm.box = 'digital_ocean'
-    override.vm.box_url = "https://github.com/smdahlen/vagrant-digitalocean/raw/master/box/digital_ocean.box"
+  config.vm.provider :digital_ocean do |p, override|
+    override.ssh.username = "#{ssh['username']}"
+    override.ssh.private_key_path = "#{ssh['private_key_path']}"
+    override.vm.box = "#{provider['box']}"
+    override.vm.box_url = "#{provider['box_url']}"
 
-    provider.token = 'MY_API_TOKEN'
-    provider.image = '14.04 x64'
-    provider.region = 'nyc3'
-    provider.size = '512mb'
-    provider.ssh_key_name = 'ssh_key_name'
+    p.token = "#{provider['token']}"
+    p.image = "#{provider['image']}"
+    p.region = "#{provider['region']}"
+    p.size = "#{provider['size']}"
+    p.ssh_key_name = "#{provider['ssh_key_name']}"
   end
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
