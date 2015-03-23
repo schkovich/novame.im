@@ -81,6 +81,16 @@ Vagrant.configure(2) do |config|
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
 
+  synced_folder.each do |key, folder|
+    unless folder['source'].empty? || folder['target'].empty?
+      sync_type = !folder['sync_type'].nil? ? folder['sync_type'] : 'rsync'
+      config.vm.synced_folder "#{folder['source']}", "#{folder['target']}", type: sync_type,
+        rsync__exclude: folder['rsync']['exclude'],
+        rsync__args: folder['rsync']['args'],
+        rsync__auto: folder['rsync']['auto']
+    end
+  end
+
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
@@ -110,4 +120,10 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get update
   #   sudo apt-get install -y apache2
   # SHELL
+  # Working directory
+  wdir = "#{provider['wdir']}"
+  # Shell provision
+  config.vm.provision "install", type: "shell", run: "once" do |i|
+    i.path = "#{shell['install']}"
+  end
 end

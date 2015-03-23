@@ -1,0 +1,13 @@
+options:
+  external-puppetmaster:
+    type: string
+    default: ""
+    description: |
+      This will be the external puppet master server string. If a
+      puppet master is related, this will be ignored.
+  puppet-repo:
+    type: string
+    default: "http://apt.puppetlabs.com/puppetlabs-release-%s.deb"
+    description: |
+      The URL of PuppetLabs repo having placeholder for Ubuntu series number.
+      Place holder will be replaced with distribution code name e.g. 14.04
